@@ -1,52 +1,121 @@
-project(LLF)
+# Copyright (c) 2015, David Hirvonen
+# All rights reserved.
 
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${LLF_SOURCE_DIR}/cmake)
+### Hunter snapshot that will be used ###
+include("cmake/HunterGate.cmake")
+HunterGate(
+    URL "https://github.com/ruslo/hunter/archive/v0.14.3.tar.gz"
+    SHA1 "e05bc95f6d62b7c55188044e39e8be5afb1e8af4"
+    LOCAL
+)
+  
+project(LLF VERSION 0.1.0)
 
-set(LIB_MACROS "")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules")
 
-# Find external libraries
-find_package(OpenCV)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-else()
-  message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11
-                  support. Please use a different C++ compiler.")
+set(is_android ${ANDROID}) # syntax compatibility
+string(COMPARE EQUAL "${CMAKE_OSX_SYSROOT}" "iphoneos" is_ios)
+string(COMPARE EQUAL "${CMAKE_SYSTEM_NAME}" "Linux" is_linux)
+string(COMPARE EQUAL "${CMAKE_GENERATOR}" "Xcode" is_xcode)
+
+if(is_xcode)
+  option(CVSTEER_DISABLE_DSYM "Disable generation of dSYM information" ON)
+  if(CVSTEER_DISABLE_DSYM)
+    set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf")
+  endif()
+  set(CMAKE_CONFIGURATION_TYPES "Debug;Release;MinSizeRel;RelWithDebInfo" CACHE STRING "Configuration types")
+  set(CMAKE_XCODE_ATTRIBUTE_ENABLE_BITCODE NO)
 endif()
 
-set(CMAKE_BUILD_TYPE "Debug")
-if (NOT (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "Debug"))
-  set(CMAKE_BUILD_TYPE "Release")
-endif()
+## #################################################################
+## Dependencies - OpenCV
+## #################################################################
 
-string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_tolower)
-if(    NOT cmake_build_type_tolower STREQUAL "debug"
-   AND NOT cmake_build_type_tolower STREQUAL "release")
-  message(FATAL_ERROR "Unknown build type \"${CMAKE_BUILD_TYPE}\". Allowed values are Debug, Release (case-insensitive).")
-endif()
+hunter_add_package(OpenCV)
+find_package(OpenCV REQUIRED)
 
-include_directories(${LLF_SOURCE_DIR})
+## #################################################################
+## Library
+## #################################################################
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-if (cmake_build_type_tolower STREQUAL "release")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
-endif()
+include_directories(.)
 
-set(hdrs gaussian_pyramid.h
-         laplacian_pyramid.h
-         opencv_utils.h
-         remapping_function.h)
-set(srcs gaussian_pyramid.cpp
-         laplacian_pyramid.cpp
-         opencv_utils.cpp
-         remapping_function.cpp)
+#add_subdirectory(cvsteer)
+#add_subdirectory (test)
 
-add_executable(main ${srcs} ${hdrs} main.cpp)
-target_link_libraries(main ${OpenCV_LIBS})
+add_library(llf
+  gaussian_pyramid.cpp
+  gaussian_pyramid.h
+  laplacian_pyramid.cpp
+  laplacian_pyramid.h
+  local_laplacian.h
+  opencv_utils.cpp
+  opencv_utils.h
+  remapping_function.cpp
+  remapping_function.h
+  )
+
+target_link_libraries(llf ${OpenCV_LIBS})
+
+## #################################################################
+## Executable
+## #################################################################
+
+add_executable(locallaplacian main.cpp)
+target_link_libraries(locallaplacian llf ${OpenCV_LIBS})
+install(TARGETS locallaplacian DESTINATION bin)
+
+## #################################################################
+## Install
+## #################################################################
+
+set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+
+set(config_install_dir "lib/cmake/${PROJECT_NAME}")
+set(include_install_dir "include")
+set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
+set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
+set(targets_export_name "${PROJECT_NAME}Targets")
+set(namespace "${PROJECT_NAME}::")
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${version_config}" COMPATIBILITY SameMajorVersion
+)
+
+# Note: use 'targets_export_name'
+configure_file("cmake/Config.cmake.in" "${project_config}" @ONLY)
+
+install(
+    TARGETS llf
+    EXPORT "${targets_export_name}"
+    LIBRARY DESTINATION "lib"
+    ARCHIVE DESTINATION "lib"
+    RUNTIME DESTINATION "bin"
+    INCLUDES DESTINATION "${include_install_dir}/${PROJECT_NAME}"
+)
+
+install(
+    FILES
+    gaussian_pyramid.h # TODO: min subset?
+    laplacian_pyramid.h
+    local_laplacian.h
+    opencv_utils.h
+    remapping_function.h
+    DESTINATION "${include_install_dir}/${PROJECT_NAME}"
+)
+
+install(
+    FILES "${project_config}" "${version_config}"
+    DESTINATION "${config_install_dir}"
+)
+
+install(
+    EXPORT "${targets_export_name}"
+    NAMESPACE "${namespace}"
+    DESTINATION "${config_install_dir}"
+)
