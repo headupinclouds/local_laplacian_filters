@@ -1,3 +1,7 @@
+TRAVIS: [![Build Status](https://travis-ci.org/headupinclouds/local_laplacian_filters.svg?branch=hunter)](https://travis-ci.org/headupinclouds/local_laplacian_filters)
+APPVEYOR: [![Build status](https://ci.appveyor.com/api/projects/status/9uo26abfh8tece9c/branch/hunter?svg=true)](https://ci.appveyor.com/project/headupinclouds/local-laplacian-filters/branch/hunter)
+
+
 # README #
 
 Implementation of the Local Laplacian Filters image processing algorithm in C++ using OpenCV. The algorithm is described here:
