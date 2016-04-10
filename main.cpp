@@ -30,8 +30,8 @@ const char *keys =
     "{ output    |       | output filename                           }"
     "{ levels    |   3   | number of pyramid levels                  }"
     "{ sigma     |  0.3  | threshold distinguishing details from edges. Smaller values limit the manipulation to smaller-amplitude variations }"
-    "{ alpha     |  2.0  | controls how details are modified: 0<a<1 amplifies detail, while α>1 attenuates it }"
-    "{ beta      |  1.0  | beta controls edge info                   }"
+    "{ alpha     |  2.0  | controls how details are modified: 0<a<1 amplifies detail, while a>1 attenuates it.     }"
+    "{ beta      |  1.0  | intensity range: beta > 1.0 performs expansion, while beta < 1.0 performs compression.  }"
     "{ threads   | false | use worker threads when possible          }"
     "{ verbose   | false | print verbose diagnostics                 }"
     "{ build     | false | print the OpenCV build information        }"
@@ -89,33 +89,24 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if(0)
-    {
-        int spatialRad = 10, colorRad = 40, maxPyrLevel = 3; 
-        cv::Mat ms;
-        cv::pyrMeanShiftFiltering(input, ms, spatialRad, colorRad, maxPyrLevel);
-        cv::swap(input, ms);
-        //cv::imshow("ms", ms); cv::waitKey(0);
-    }
-    
     input.convertTo(input, CV_64F, 1 / 255.0);
 
     cout << "Input image: " << sInput << " Size: " << input.cols << " x " << input.rows << " Channels: " << input.channels() << endl;
 
     cv::Mat output;
     if (input.channels() == 1) {
-        output = LocalLaplacianFilter<double>(input, kAlpha, kBeta, kSigmaR);
+        output = LocalLaplacianFilter<double>(input, kAlpha, kBeta, kSigmaR, kLevels);
     } else if (input.channels() == 3) {
-        output = LocalLaplacianFilter<cv::Vec3d>(input, kAlpha, kBeta, kSigmaR);
+        output = LocalLaplacianFilter<cv::Vec3d>(input, kAlpha, kBeta, kSigmaR, kLevels);
     } else {
         cerr << "Input image must have 1 or 3 channels." << endl;
         return 1;
     }
 
     output *= 255;
-    output.convertTo(output, input.type());
-
-    imwrite(sOutput, output);
+    output.convertTo(output, CV_8UC3);
+    
+    cv::imwrite(sOutput, output);
 
     return 0;
 }
