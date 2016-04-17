@@ -77,6 +77,11 @@ namespace ll
     {
         return log(value) / log(2.0);
     }
+
+    static double ceil(double value)
+    {
+        return ::ceil(value);
+    }
 }
 
 int LaplacianPyramid::GetLevelCount(int rows, int cols, int desired_base_size) {
@@ -85,7 +90,7 @@ int LaplacianPyramid::GetLevelCount(int rows, int cols, int desired_base_size) {
   double log2_dim = ll::log2(min_dim);
   double log2_des = ll::log2(desired_base_size);
 
-  return static_cast<int>(std::ceil(std::abs(log2_dim - log2_des)));
+  return static_cast<int>(ll::ceil(std::abs(log2_dim - log2_des)));
 }
 
 std::ostream &operator<<(std::ostream &output,
