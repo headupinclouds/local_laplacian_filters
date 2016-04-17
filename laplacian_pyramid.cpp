@@ -69,11 +69,21 @@ Mat LaplacianPyramid::Reconstruct() const {
   return base;
 }
 
+
+namespace ll
+{
+    // Some platforms are missing std::log2()
+    static double log2(double value)
+    {
+        return log(value) / log(2.0);
+    }
+}
+
 int LaplacianPyramid::GetLevelCount(int rows, int cols, int desired_base_size) {
   int min_dim = std::min(rows, cols);
 
-  double log2_dim = std::log2(min_dim);
-  double log2_des = std::log2(desired_base_size);
+  double log2_dim = ll::log2(min_dim);
+  double log2_des = ll::log2(desired_base_size);
 
   return static_cast<int>(std::ceil(std::abs(log2_dim - log2_des)));
 }
