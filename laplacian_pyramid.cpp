@@ -3,7 +3,9 @@
 
 #include "laplacian_pyramid.h"
 #include "gaussian_pyramid.h"
+
 #include <iostream>
+#include <cmath>
 
 using namespace std;
 using cv::Mat;
@@ -75,7 +77,7 @@ namespace ll
     // Some platforms are missing std::log2()
     static double log2(double value)
     {
-#if HAVE_STD_LOG2
+#if HAVE_STD_LOG2 && !ANDROID
         return std::log2(value);
 #else
         return log(value) / log(2.0);
@@ -84,7 +86,7 @@ namespace ll
 
     static double ceil(double value)
     {
-#if HAVE_STD_CEIL
+#if HAVE_STD_CEIL && !ANDROID
         return std::ceil(value);
 #else
         return ::ceil(value);
