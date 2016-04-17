@@ -5,10 +5,11 @@ cmake_minimum_required(VERSION 3.0)
 
 ### Hunter snapshot that will be used ###
 include("cmake/HunterGate.cmake")
+
 HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.14.3.tar.gz"
-    SHA1 "e05bc95f6d62b7c55188044e39e8be5afb1e8af4"
-    LOCAL
+  URL "https://github.com/ruslo/hunter/archive/v0.14.12.tar.gz"
+  SHA1 "2d444140db0d53393b5490604006bb4f4896a444"
+  LOCAL
 )
   
 project(LLF VERSION 0.1.0)
@@ -16,6 +17,12 @@ project(LLF VERSION 0.1.0)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+include (CheckCXXSymbolExists)
+CHECK_CXX_SYMBOL_EXISTS ( log2 "cmath" HAVE_STD_LOG2 )
+CHECK_CXX_SYMBOL_EXISTS ( ceil "cmath" HAVE_STD_CEIL )
+add_definitions(-DHAVE_STD_LOG2=${HAVE_STD_LOG2})
+add_definitions(-DHAVE_STD_CEIL=${HAVE_STD_CEIL})
 
 set(is_android ${ANDROID}) # syntax compatibility
 string(COMPARE EQUAL "${CMAKE_OSX_SYSROOT}" "iphoneos" is_ios)

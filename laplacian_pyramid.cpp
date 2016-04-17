@@ -75,12 +75,20 @@ namespace ll
     // Some platforms are missing std::log2()
     static double log2(double value)
     {
+#if HAVE_STD_LOG2
+        return std::log2(value);
+#else
         return log(value) / log(2.0);
+#endif
     }
 
     static double ceil(double value)
     {
+#if HAVE_STD_CEIL
+        return std::ceil(value);
+#else
         return ::ceil(value);
+#endif
     }
 }
 
