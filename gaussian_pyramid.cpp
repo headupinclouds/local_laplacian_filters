@@ -119,7 +119,7 @@ void GaussianPyramid::GetLevelSize(const vector<int> base_subwindow,
   }
 }
 
-inline double GaussianPyramid::WeightingFunction(int i, double a) {
+double GaussianPyramid::WeightingFunction(int i, double a) {
   switch (i) {
     case 0: return a;
     case -1: case 1: return 0.25;
