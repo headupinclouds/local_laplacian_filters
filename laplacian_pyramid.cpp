@@ -3,7 +3,9 @@
 
 #include "laplacian_pyramid.h"
 #include "gaussian_pyramid.h"
+
 #include <iostream>
+#include <cmath>
 
 using namespace std;
 using cv::Mat;
@@ -69,13 +71,36 @@ Mat LaplacianPyramid::Reconstruct() const {
   return base;
 }
 
+
+namespace ll
+{
+    // Some platforms are missing std::log2()
+    static double log2(double value)
+    {
+#if HAVE_STD_LOG2 && !ANDROID
+        return std::log2(value);
+#else
+        return log(value) / log(2.0);
+#endif
+    }
+
+    static double ceil(double value)
+    {
+#if HAVE_STD_CEIL && !ANDROID
+        return std::ceil(value);
+#else
+        return ::ceil(value);
+#endif
+    }
+}
+
 int LaplacianPyramid::GetLevelCount(int rows, int cols, int desired_base_size) {
   int min_dim = std::min(rows, cols);
 
-  double log2_dim = std::log2(min_dim);
-  double log2_des = std::log2(desired_base_size);
+  double log2_dim = ll::log2(min_dim);
+  double log2_des = ll::log2(desired_base_size);
 
-  return static_cast<int>(std::ceil(std::abs(log2_dim - log2_des)));
+  return static_cast<int>(ll::ceil(std::abs(log2_dim - log2_des)));
 }
 
 std::ostream &operator<<(std::ostream &output,
